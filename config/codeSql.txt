@@ -1,0 +1,84 @@
+-- Fichier: database.sql
+-- Membre 1 : conçoit la BDD
+
+CREATE DATABASE mkFashion;
+
+USE ecommerce_bro;
+
+-- Table utilisateurs (auth)
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,  -- hashé
+    role ENUM('client', 'admin') DEFAULT 'client',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table produits (vêtements)
+CREATE TABLE products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(200) NOT NULL,
+    description TEXT,
+    price DECIMAL(10,2) NOT NULL,
+    image_url VARCHAR(255),
+    stock INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table panier / commande en cours
+CREATE TABLE carts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+-- Table commandes finalisées
+CREATE TABLE orders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    total_price DECIMAL(10,2) NOT NULL,
+    status ENUM('pending','paid','shipped','delivered') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Détails de chaque commande
+CREATE TABLE order_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+CREATE TABLE IF NOT EXISTS payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    status ENUM('pending', 'paid', 'failed') DEFAULT 'pending',
+    session_id VARCHAR(100) NOT NULL,
+    paid_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+);
+
+INSERT INTO products (name, description, price, image_url, stock) VALUES
+('T-Shirt "Urban Legend"', 'T-shirt 100% coton bio, imprimé sérigraphié "Urban Legend". Coupe regular, disponible en noir et blanc.', 29.99, 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300', 50),
+('Hoodie "Street Code"', 'Hoodie oversize avec capuche, broderie "Street Code" sur la poitrine. 80% coton, 20% polyester.', 59.99, 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=300', 30),
+('Jean "Slim Black"', 'Jean slim noir stretch, parfait pour un look urbain. 98% coton, 2% élasthanne.', 49.99, 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=300', 25),
+('Casquette "NY Style"', 'Casquette ajustable, motif brodé. 100% coton, couleur noire.', 19.99, 'https://images.unsplash.com/photo-1588850571404-5ce7a00965de?w=300', 100),
+('Veste "Bomber Noir"', 'Veste bomber classique en nylon, doublure satinée, zip central.', 89.99, 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=300', 15),
+('Sneakers "Air Flow"', 'Baskets tendance, semelle épaisse, mesh respirant. Disponible du 39 au 45.', 79.99, 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300', 20),
+('Pull "Oversize Grey"', 'Pull oversize couleur gris chiné, col rond, manches longues.', 54.99, 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=300', 35),
+('Short "Cargo"', 'Short cargo kaki, multiples poches, parfait pour l\'été.', 39.99, 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=300', 40);
+
+UPDATE users SET role = 'admin' WHERE email = 'marichy@gmail.com';
+
+
